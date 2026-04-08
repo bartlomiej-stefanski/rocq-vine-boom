@@ -16,12 +16,41 @@ export function activate(context: vscode.ExtensionContext) {
 	const tacticErrorSound = path.join(context.extensionPath, 'vine-boom.mp3');
 	const qedFailSound = path.join(context.extensionPath, 'falling-metal-pipe.mp3');
 
+	let wasTyping = false;
+	let lastTypedChar = -1;
+	let lastTypedLine = -1;
+	const typingListener = vscode.workspace.onDidChangeTextDocument(e => {
+		lastTypedChar = vscode.window.activeTextEditor?.selection.active.character ?? -1;
+		lastTypedLine = vscode.window.activeTextEditor?.selection.active.line ?? -1;
+		wasTyping = true;
+	});
+
 	let lastErrorCount = 0;
 	const errorListener = vscode.languages.onDidChangeDiagnostics(e => {
+		const editor = vscode.window.activeTextEditor;
 		let errorCnt = 0;
+		let cursorOnError = false;
 		let qedFail = false;
 
 		for (const uri of e.uris) {
+			const uriString = uri.toString();
+			let cursorPosition = null;
+			if (editor && editor.document.uri.toString() === uriString) {
+				cursorPosition = editor.selection.active;
+
+				if (wasTyping) {
+					const onSameLine = lastTypedLine === cursorPosition.line;
+					const justDeletedChar = lastTypedChar - 1 === cursorPosition.character;
+
+					// Works *almost* always.
+					// Edge case if user deletes many chars at once (or we get bad timing, etc...).
+					const mightBeErrorDueToTyping = onSameLine && justDeletedChar;
+					if (!mightBeErrorDueToTyping) {
+						wasTyping = false;
+					}
+				}
+			}
+
 			const diag = vscode.languages.getDiagnostics(uri);
 			errorCnt += diag.filter(d => {
 				const isTacticFailure = 
@@ -33,11 +62,20 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				
 				const isFailure = isTacticFailure || isQedFailure;
+
+				const cursorLine = cursorPosition?.line ?? -1;
+				const cursorPos = cursorPosition?.character ?? -1;
+				const cursorOnErrorLine = cursorLine === d.range.end.line;
+				const cursorAfterError = d.range.end.character === cursorPos;
+				if (isFailure && cursorOnErrorLine && cursorAfterError) {
+					cursorOnError = true;
+				}
+
 				return isFailure && d.severity === vscode.DiagnosticSeverity.Error;
 			}).length;
 		}
 
-		if (errorCnt > lastErrorCount) {
+		if (errorCnt > lastErrorCount || (cursorOnError && !wasTyping)) {
 			if (qedFail) {
 				playSound(qedFailSound);
 			} else {
@@ -59,6 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(typingListener);
 	context.subscriptions.push(errorListener);
 }
 
