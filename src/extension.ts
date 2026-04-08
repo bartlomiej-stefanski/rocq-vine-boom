@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const diag = vscode.languages.getDiagnostics(uri);
 			errorCnt += diag.filter(d => {
 				const isTacticFailure = 
-					/unify|inductive|environment/i.test(d.message);
+					/unify|inductive|environment|no product|tactic failure|no such hypothesis|not a declared reflexive/i.test(d.message);
 				
 				return isTacticFailure && d.severity == vscode.DiagnosticSeverity.Error;
 			}).length;
