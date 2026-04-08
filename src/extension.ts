@@ -13,25 +13,38 @@ function playSound(soundPath: string) {
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "rocq-vine-boom" is now active!');
 
-	const soundPath = path.join(context.extensionPath, 'vine-boom.mp3');
+	const tacticErrorSound = path.join(context.extensionPath, 'vine-boom.mp3');
+	const qedFailSound = path.join(context.extensionPath, 'falling-metal-pipe.mp3');
+
 	let lastErrorCount = 0;
 	const errorListener = vscode.languages.onDidChangeDiagnostics(e => {
-		//console.log('DIAGNOSTICS CHANGED');
 		let errorCnt = 0;
+		let qedFail = false;
+
 		for (const uri of e.uris) {
 			const diag = vscode.languages.getDiagnostics(uri);
 			errorCnt += diag.filter(d => {
 				const isTacticFailure = 
 					/unify|inductive|environment|no product|tactic failure|no such hypothesis|not a declared reflexive/i.test(d.message);
+
+				const isQedFailure = /incomplete proof/i.test(d.message);
+				if (isQedFailure) {
+					qedFail = true;
+				}
 				
-				return isTacticFailure && d.severity == vscode.DiagnosticSeverity.Error;
+				const isFailure = isTacticFailure || isQedFailure;
+				return isFailure && d.severity === vscode.DiagnosticSeverity.Error;
 			}).length;
 		}
+
 		if (errorCnt > lastErrorCount) {
-			//console.log('Should play sound...');
-			playSound(soundPath);
+			if (qedFail) {
+				playSound(qedFailSound);
+			} else {
+				playSound(tacticErrorSound);
+			}
 		}
-		//console.log(errorCnt);
+
 		lastErrorCount = errorCnt;
 	});
 
@@ -41,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const disposable = vscode.commands.registerCommand('rocq-vine-boom.testSound', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		playSound(soundPath);
+		playSound(tacticErrorSound);
 		vscode.window.showInformationMessage("BOOM");
 	});
 
