@@ -12,7 +12,7 @@ ffmpeg, I guess?
 
 ## Known Issues
 
-Does not replay when the same error appears twice (for example, when trying to use the same failing tactic twice).
+Sometimes replays failed tactic sound during editing editing (very rarely).
 
 ## Release Notes
 
