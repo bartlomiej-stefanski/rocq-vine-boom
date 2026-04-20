@@ -8,7 +8,7 @@ If you fail an `apply`, `destruct`, reference a value nonexistent in context or 
 
 ## Requirements
 
-ffmpeg, I guess?
+ffmpeg and vsrocq-language-server, I guess?
 
 ## Known Issues
 

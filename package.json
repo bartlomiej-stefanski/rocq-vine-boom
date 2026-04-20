@@ -1,8 +1,9 @@
 {
   "name": "rocq-vine-boom",
   "displayName": "rocq-vine-boom",
-  "description": "",
-  "version": "0.0.1",
+  "description": "VSCode extension I made for fun, that plays a Vine boom sound when a proof goes wrong.",
+  "repository": "https://github.com/s-feles/rocq-vine-boom",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.110.0"
   },
