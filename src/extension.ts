@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const diag = vscode.languages.getDiagnostics(uri);
 			errorCnt += diag.filter(d => {
 				const isTacticFailure = 
-					/unify|inductive|environment|no product|tactic failure|no such hypothesis|not a declared reflexive|primitive equality/i.test(d.message);
+					/unify|not (an )?inductive|environment|no product|tactic failure|no such hypothesis|not a declared reflexive|primitive equality/i.test(d.message);
 
 				const isQedFailure = /incomplete proof/i.test(d.message);
 				if (isQedFailure) {
